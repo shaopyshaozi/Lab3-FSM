@@ -1,6 +1,6 @@
 #include "verilated.h"
 #include "verilated_vcd_c.h"
-#include "Vf1_fsm.h"
+#include "Vlight.h"
 
 #include "vbuddy.cpp"     // include vbuddy code
 #define MAX_SIM_CYC 1000000
@@ -13,21 +13,23 @@ int main(int argc, char **argv, char **env) {
 
   Verilated::commandArgs(argc, argv);
   // init top verilog instance
-  Vf1_fsm* top = new Vf1_fsm;
+  Vlight* top = new Vlight;
   // init trace dump
   Verilated::traceEverOn(true);
   VerilatedVcdC* tfp = new VerilatedVcdC;
   top->trace (tfp, 99);
-  tfp->open ("f1_fsm.vcd");
+  tfp->open ("light.vcd");
  
   // init Vbuddy
   if (vbdOpen()!=1) return(-1);
-  vbdHeader("L3T2: f1_fsm");
+  vbdHeader("L3T3 F1_light");
   vbdSetMode(1);        // Flag mode set to one-shot
 
   // initialize simulation inputs
   top->clk = 1;
-  top->rst = 1;
+  top->rst1 = 1;
+  top->rst2 = 1;
+  top->offset = 27;
  
 
   // run simulation for MAX_SIM_CYC clock cycles
@@ -39,9 +41,11 @@ int main(int argc, char **argv, char **env) {
       top->eval ();
     }
 
-    top->rst=0;
+    top->rst1 = simcyc<2 ;
+    top->rst2 = simcyc<2 ;
+    top->offset = vbdValue();
     // print data
-    top->en = vbdFlag();
+    //top->en = vbdFlag();
     //vbdHex(1, top->data_out & 0xF);
     vbdBar(top->data_out & 0xFF);
     vbdCycle(simcyc);
